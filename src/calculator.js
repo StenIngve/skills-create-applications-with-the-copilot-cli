@@ -6,6 +6,9 @@
  * - Subtraction (-)
  * - Multiplication (*)
  * - Division (/)
+ * - Modulo (%)
+ * - Power (^)
+ * - Square root (sqrt)
  */
 function add(a, b) {
   return a + b;
@@ -27,6 +30,26 @@ function divide(a, b) {
   return a / b;
 }
 
+function modulo(a, b) {
+  if (b === 0) {
+    throw new Error('Modulo by zero is not allowed.');
+  }
+
+  return a % b;
+}
+
+function power(base, exponent) {
+  return base ** exponent;
+}
+
+function squareRoot(n) {
+  if (n < 0) {
+    throw new Error('Square root of a negative number is not allowed.');
+  }
+
+  return Math.sqrt(n);
+}
+
 const OPERATIONS = {
   add,
   '+': add,
@@ -36,7 +59,16 @@ const OPERATIONS = {
   '*': multiply,
   divide,
   '/': divide,
+  modulo,
+  '%': modulo,
+  power,
+  pow: power,
+  '^': power,
+  squareRoot,
+  sqrt: squareRoot,
 };
+
+const UNARY_OPERATIONS = new Set(['squareRoot', 'sqrt']);
 
 function parseNumber(value, name) {
   const parsedValue = Number(value);
@@ -48,28 +80,45 @@ function parseNumber(value, name) {
   return parsedValue;
 }
 
-function calculate(operation, leftOperand, rightOperand) {
+function calculate(operation, ...operands) {
   const executor = OPERATIONS[operation];
 
   if (!executor) {
     throw new Error(
-      'Unsupported operation. Use add, subtract, multiply, divide, or the symbols +, -, *, /.',
+      'Unsupported operation. Use add, subtract, multiply, divide, modulo, power, squareRoot, sqrt, or supported symbols.',
     );
   }
 
-  return executor(leftOperand, rightOperand);
+  return executor(...operands);
 }
 
 function main(argv) {
-  const [operation, leftInput, rightInput] = argv;
+  const [operation, ...inputs] = argv;
 
-  if (argv.length !== 3) {
-    throw new Error('Usage: node src/calculator.js <operation> <number1> <number2>');
+  if (!operation) {
+    throw new Error(
+      'Usage: node src/calculator.js <operation> <number1> [number2]. Use one number for sqrt and two numbers for other operations.',
+    );
   }
 
-  const leftOperand = parseNumber(leftInput, 'The first value');
-  const rightOperand = parseNumber(rightInput, 'The second value');
-  const result = calculate(operation, leftOperand, rightOperand);
+  if (!OPERATIONS[operation]) {
+    throw new Error(
+      'Unsupported operation. Use add, subtract, multiply, divide, modulo, power, squareRoot, sqrt, or supported symbols.',
+    );
+  }
+
+  const expectedInputCount = UNARY_OPERATIONS.has(operation) ? 1 : 2;
+
+  if (inputs.length !== expectedInputCount) {
+    throw new Error(
+      'Usage: node src/calculator.js <operation> <number1> [number2]. Use one number for sqrt and two numbers for other operations.',
+    );
+  }
+
+  const parsedInputs = inputs.map((input, index) =>
+    parseNumber(input, index === 0 ? 'The first value' : 'The second value'),
+  );
+  const result = calculate(operation, ...parsedInputs);
 
   console.log(result);
 }
@@ -88,7 +137,10 @@ module.exports = {
   calculate,
   divide,
   main,
+  modulo,
   multiply,
   parseNumber,
+  power,
+  squareRoot,
   subtract,
 };
